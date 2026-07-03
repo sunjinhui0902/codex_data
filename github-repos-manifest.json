@@ -1,0 +1,12 @@
+[
+  {
+    "name": "codex_data",
+    "ssh_url": "git@github.com:sunjinhui0902/codex_data.git",
+    "default_branch": "main"
+  },
+  {
+    "name": "vscode-sync-test",
+    "ssh_url": "git@github.com:sunjinhui0902/vscode-sync-test.git",
+    "default_branch": "main"
+  }
+]
