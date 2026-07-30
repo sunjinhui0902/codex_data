@@ -1,0 +1,46 @@
+name: ETL 监控提醒
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1-6"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 发送 Bark 通知
+        env:
+          BARK_DEVICE_KEY: ${{ secrets.BARK_DEVICE_KEY }}
+          TARGET_URL: "http://112.113.113.107:8114/webroot/decision/view/report?viewlet=test%252FETL%25E7%259B%2591%25E6%258E%25A7.cpt&ref_t=design&ref_c=5cdc4474-2693-43d8-99ee-a01cdacda0b5"
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BARK_DEVICE_KEY:-}" ]; then
+            echo "缺少仓库 Secret：BARK_DEVICE_KEY"
+            exit 1
+          fi
+
+          payload="$(python3 - <<'PY'
+          import json
+          import os
+
+          print(json.dumps({
+              "device_key": os.environ["BARK_DEVICE_KEY"],
+              "title": "ETL 监控提醒",
+              "body": "请打开 ETL 监控页面，检查失败、超时及数据同步任务。",
+              "level": "timeSensitive",
+              "sound": "minuet",
+              "group": "ETL巡检",
+              "isArchive": "1",
+              "url": os.environ["TARGET_URL"]
+          }, ensure_ascii=False))
+          PY
+          )"
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Content-Type: application/json; charset=utf-8" \
+            --data "$payload" \
+            "https://api.day.app/push"
